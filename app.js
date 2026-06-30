@@ -6,6 +6,15 @@ const personas = {
   "pigeon-crumb": { id: "persona-pigeon-crumb", name: "Pigeon Crumb", handle: "pigeon" }
 };
 
+const channelThemes = {
+  general: { video: "./assets/constitution/table-signal.mp4", focus: "signal" },
+  constitution: { video: "./assets/constitution/crumbs.mp4", focus: "table" },
+  hustlers: { video: "./assets/constitution/crumbs1.mp4", focus: "blueprint" },
+  "tax-reaper": { video: "./assets/constitution/crumbs2.mp4", focus: "redline" },
+  loans: { video: "./assets/constitution/kindest-sweetest.mp4", focus: "bronze" },
+  "suits-tism": { video: "./assets/constitution/table-signal.mp4", focus: "specter" }
+};
+
 const soundboardSounds = [
   { label: "vineboom", icon: "X", type: "boom", src: "./assets/soundboard/vineboom.ogg" },
   { label: "heil", icon: "H", type: "chant", src: "./assets/soundboard/heil.ogg" },
@@ -156,6 +165,13 @@ function displayName(value) {
   return value && value.includes("@") ? value.split("@")[0] : value || "Guest";
 }
 
+function personaClassName(value) {
+  const normalized = (value || "").toLowerCase();
+  if (normalized.includes("rasta")) return "persona-rasta-bum";
+  if (normalized.includes("pigeon")) return "persona-pigeon-crumb";
+  return "persona-guest";
+}
+
 function channelSeed() {
   return seededMessages[state.channel] || [];
 }
@@ -223,6 +239,9 @@ function setUser(session) {
   state.session = session;
   const identity = currentIdentity();
   userAvatar.textContent = initials(identity?.name || "Guest");
+  userAvatar.classList.remove("persona-rasta-bum", "persona-pigeon-crumb", "persona-guest");
+  userAvatar.classList.add(personaClassName(identity?.name));
+  document.body.dataset.persona = identity ? personaClassName(identity.name).replace("persona-", "") : "guest";
   userName.textContent = identity?.name || "Guest";
   userEmail.textContent = identity?.handle || "Not signed in";
   authPanel.hidden = Boolean(identity);
@@ -400,7 +419,7 @@ function renderMembers() {
     .map(
       (member) => `
         <div class="member">
-          <div class="avatar">${initials(member.name)}</div>
+          <div class="avatar ${personaClassName(member.name)}">${initials(member.name)}</div>
           <div>
             <strong>${member.name}</strong>
             <span>${member.status}</span>
@@ -448,7 +467,9 @@ function renderMessages() {
   state.messages.forEach((message) => {
     const node = (message.media_url ? videoPostTemplate : messageTemplate).content.cloneNode(true);
     const author = message.author_name || message.author_email || "unknown";
-    node.querySelector(".message-avatar").textContent = initials(author);
+    const avatar = node.querySelector(".message-avatar");
+    avatar.textContent = initials(author);
+    avatar.classList.add(personaClassName(author));
     node.querySelector(".message-author").textContent = displayName(author);
     node.querySelector(".message-time").textContent = new Date(message.created_at).toLocaleString([], {
       month: "short",
@@ -470,11 +491,19 @@ function renderMessages() {
 }
 
 function updateTheme() {
+  const theme = channelThemes[state.channel] || channelThemes.general;
   const constitutionMode = state.channel === "constitution";
   document.body.classList.add("signal-theme");
+  document.body.dataset.channel = state.channel;
+  document.body.dataset.focus = theme.focus;
   document.body.classList.toggle("constitution-theme", constitutionMode);
 
   if (!themeVideo) return;
+  const source = themeVideo.querySelector("source");
+  if (source && source.getAttribute("src") !== theme.video) {
+    source.setAttribute("src", theme.video);
+    themeVideo.load();
+  }
   themeVideo.play().catch(() => {});
 }
 
@@ -957,6 +986,7 @@ async function init() {
   }
   setUser(null);
   renderMembers();
+  updateTheme();
 
   if (!client) {
     setStatus("Setup needed");

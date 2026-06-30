@@ -1,20 +1,70 @@
 :root {
   color-scheme: dark;
-  --bg: #1e1f22;
-  --surface: #2b2d31;
-  --surface-strong: #383a40;
-  --surface-soft: #232428;
-  --line: #3f4148;
+  --bg: #101216;
+  --surface: #252930;
+  --surface-strong: #343942;
+  --surface-soft: #1a1d23;
+  --line: #3a404a;
   --text: #f2f3f5;
-  --muted: #b5bac1;
-  --accent: #7c6cff;
-  --accent-strong: #5e53d9;
-  --signal: #b8adff;
-  --specter: #e6e2ff;
+  --muted: #aeb6c2;
+  --accent: #8a8fb8;
+  --accent-strong: #6f789d;
+  --signal: #b4b4cc;
+  --specter: #e4cccc;
+  --channel-accent: #b4b4cc;
+  --channel-strong: #6c6c9c;
+  --channel-dim: rgba(180, 180, 204, 0.16);
+  --channel-wash: rgba(108, 108, 156, 0.2);
+  --persona-rasta: #85a36a;
+  --persona-rasta-strong: #d4b46a;
+  --persona-pigeon: #d48f87;
+  --persona-pigeon-strong: #7c98b4;
   --good: #67d391;
   --danger: #ff6b6b;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body[data-channel="general"] {
+  --channel-accent: #b4b4cc;
+  --channel-strong: #6c6c9c;
+  --channel-dim: rgba(180, 180, 204, 0.17);
+  --channel-wash: rgba(108, 108, 156, 0.22);
+}
+
+body[data-channel="constitution"] {
+  --channel-accent: #e4b49c;
+  --channel-strong: #0c3c54;
+  --channel-dim: rgba(228, 180, 156, 0.18);
+  --channel-wash: rgba(12, 60, 84, 0.3);
+}
+
+body[data-channel="hustlers"] {
+  --channel-accent: #6c9c9c;
+  --channel-strong: #6c849c;
+  --channel-dim: rgba(108, 156, 156, 0.18);
+  --channel-wash: rgba(108, 132, 156, 0.28);
+}
+
+body[data-channel="tax-reaper"] {
+  --channel-accent: #b40c0c;
+  --channel-strong: #846c6c;
+  --channel-dim: rgba(180, 12, 12, 0.18);
+  --channel-wash: rgba(84, 60, 60, 0.32);
+}
+
+body[data-channel="loans"] {
+  --channel-accent: #9c6c54;
+  --channel-strong: #84543c;
+  --channel-dim: rgba(156, 108, 84, 0.2);
+  --channel-wash: rgba(84, 36, 36, 0.28);
+}
+
+body[data-channel="suits-tism"] {
+  --channel-accent: #9c9ccc;
+  --channel-strong: #8484b4;
+  --channel-dim: rgba(156, 156, 204, 0.18);
+  --channel-wash: rgba(108, 132, 132, 0.22);
 }
 
 * {
@@ -35,8 +85,8 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.09;
-  filter: saturate(1.25) contrast(1.08) brightness(0.82);
+  opacity: 0.1;
+  filter: saturate(1.24) contrast(1.1) brightness(0.78);
   transition: opacity 220ms ease;
 }
 
@@ -47,25 +97,34 @@ body::before {
   pointer-events: none;
   content: "";
   background:
-    linear-gradient(90deg, rgba(30, 31, 34, 0.98) 0%, rgba(30, 31, 34, 0.93) 38%, rgba(30, 31, 34, 0.9) 100%),
-    radial-gradient(circle at 72% 18%, rgba(124, 108, 255, 0.14), transparent 30rem),
-    radial-gradient(circle at 50% 85%, rgba(35, 165, 89, 0.08), transparent 28rem);
+    linear-gradient(90deg, rgba(16, 18, 22, 0.99) 0%, rgba(16, 18, 22, 0.93) 42%, rgba(16, 18, 22, 0.88) 100%),
+    linear-gradient(135deg, var(--channel-wash) 0%, rgba(16, 18, 22, 0) 54%),
+    linear-gradient(8deg, rgba(0, 0, 0, 0.24), var(--channel-dim));
   transition: background 220ms ease;
 }
 
 body.signal-theme .theme-video {
-  opacity: 0.12;
+  opacity: 0.14;
 }
 
 body.constitution-theme .theme-video {
-  opacity: 0.28;
+  opacity: 0.26;
+}
+
+body[data-focus="blueprint"] .theme-video,
+body[data-focus="specter"] .theme-video {
+  opacity: 0.18;
+}
+
+body[data-focus="redline"] .theme-video,
+body[data-focus="bronze"] .theme-video {
+  opacity: 0.22;
 }
 
 body.constitution-theme::before {
   background:
-    linear-gradient(90deg, rgba(30, 31, 34, 0.96) 0%, rgba(49, 51, 56, 0.86) 48%, rgba(24, 24, 30, 0.74) 100%),
-    radial-gradient(circle at 70% 20%, rgba(124, 108, 255, 0.34), transparent 32rem),
-    radial-gradient(circle at 54% 72%, rgba(230, 226, 255, 0.11), transparent 18rem);
+    linear-gradient(90deg, rgba(16, 18, 22, 0.96) 0%, rgba(26, 29, 35, 0.88) 48%, rgba(10, 12, 15, 0.74) 100%),
+    linear-gradient(135deg, rgba(12, 60, 84, 0.42), rgba(228, 180, 156, 0.12) 58%, rgba(0, 0, 0, 0.12));
 }
 
 button,
@@ -83,7 +142,7 @@ button {
   grid-template-columns: 72px 300px minmax(0, 1fr) 236px;
   height: 100vh;
   overflow: hidden;
-  background: rgba(30, 31, 34, 0.86);
+  background: rgba(16, 18, 22, 0.86);
 }
 
 .rail {
@@ -93,8 +152,8 @@ button {
   gap: 14px;
   padding: 16px 10px;
   background:
-    linear-gradient(180deg, rgba(16, 17, 20, 0.98), rgba(25, 24, 33, 0.98)),
-    radial-gradient(circle at center, rgba(124, 108, 255, 0.2), transparent 10rem);
+    linear-gradient(180deg, rgba(9, 10, 12, 0.99), rgba(24, 25, 31, 0.98)),
+    linear-gradient(160deg, var(--channel-wash), rgba(10, 12, 15, 0.2));
   border-right: 1px solid #24262c;
 }
 
@@ -112,9 +171,8 @@ button {
 .brand-mark {
   color: #ffffff;
   background:
-    radial-gradient(circle at 55% 35%, var(--specter), transparent 22%),
-    linear-gradient(135deg, var(--accent), #23a559);
-  box-shadow: 0 0 22px rgba(124, 108, 255, 0.38), var(--shadow);
+    linear-gradient(135deg, var(--channel-accent), var(--channel-strong));
+  box-shadow: 0 0 22px var(--channel-dim), var(--shadow);
 }
 
 .rail-button {
@@ -138,7 +196,7 @@ button {
 
 .sidebar {
   border-right: 1px solid var(--line);
-  box-shadow: inset -1px 0 0 rgba(184, 173, 255, 0.06);
+  box-shadow: inset -1px 0 0 var(--channel-dim);
 }
 
 .members {
@@ -155,7 +213,7 @@ button {
   min-height: 70px;
   padding: 16px 18px;
   border-bottom: 1px solid var(--line);
-  background: rgba(35, 36, 40, 0.78);
+  background: linear-gradient(135deg, rgba(26, 29, 35, 0.84), var(--channel-dim));
   backdrop-filter: blur(14px);
 }
 
@@ -199,9 +257,9 @@ h2 {
 }
 
 .status-pill.online {
-  color: var(--good);
-  border-color: rgba(103, 211, 145, 0.45);
-  box-shadow: 0 0 18px rgba(103, 211, 145, 0.1);
+  color: var(--channel-accent);
+  border-color: color-mix(in srgb, var(--channel-accent) 55%, transparent);
+  box-shadow: 0 0 18px var(--channel-dim);
 }
 
 .panel {
@@ -242,7 +300,7 @@ h2 {
 }
 
 .persona-button:hover {
-  background: var(--surface-strong);
+  background: color-mix(in srgb, var(--surface-strong) 78%, var(--channel-accent));
 }
 
 .persona-button span {
@@ -252,11 +310,27 @@ h2 {
   height: 34px;
   border-radius: 8px;
   color: #ffffff;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.42), transparent 28%),
-    linear-gradient(135deg, var(--accent), #23a559);
+  background: linear-gradient(135deg, var(--channel-accent), var(--channel-strong));
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.persona-button[data-persona="rasta-bum"] span,
+.avatar.persona-rasta-bum {
+  background: linear-gradient(135deg, var(--persona-rasta), var(--persona-rasta-strong));
+}
+
+.persona-button[data-persona="pigeon-crumb"] span,
+.avatar.persona-pigeon-crumb {
+  background: linear-gradient(135deg, var(--persona-pigeon), var(--persona-pigeon-strong));
+}
+
+body[data-persona="rasta-bum"] .profile-strip {
+  border-top-color: color-mix(in srgb, var(--persona-rasta-strong) 42%, var(--line));
+}
+
+body[data-persona="pigeon-crumb"] .profile-strip {
+  border-top-color: color-mix(in srgb, var(--persona-pigeon-strong) 42%, var(--line));
 }
 
 .persona-button strong {
@@ -313,7 +387,7 @@ input:focus {
   min-height: 40px;
   border-radius: 8px;
   padding: 0 14px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--channel-accent), var(--channel-strong));
   color: #ffffff;
   font-weight: 800;
 }
@@ -345,16 +419,40 @@ input:focus {
 .channel.active,
 .channel:hover {
   color: var(--text);
-  background: var(--surface-strong);
+  background: color-mix(in srgb, var(--surface-strong) 76%, var(--channel-accent));
 }
 
 .channel.active {
-  box-shadow: inset 3px 0 0 var(--accent), 0 0 24px rgba(124, 108, 255, 0.08);
+  box-shadow: inset 3px 0 0 var(--channel-accent), 0 0 24px var(--channel-dim);
 }
 
 .channel span {
-  color: var(--accent);
+  color: var(--channel-accent);
   font-weight: 900;
+}
+
+.channel[data-channel="general"] span {
+  color: #b4b4cc;
+}
+
+.channel[data-channel="constitution"] span {
+  color: #e4b49c;
+}
+
+.channel[data-channel="hustlers"] span {
+  color: #6c9c9c;
+}
+
+.channel[data-channel="tax-reaper"] span {
+  color: #b40c0c;
+}
+
+.channel[data-channel="loans"] span {
+  color: #9c6c54;
+}
+
+.channel[data-channel="suits-tism"] span {
+  color: #9c9ccc;
 }
 
 .channel.locked::after,
@@ -384,7 +482,7 @@ input:focus {
 }
 
 .voice-channel span {
-  color: #73c7b4;
+  color: var(--channel-accent);
   font-weight: 900;
 }
 
@@ -396,18 +494,18 @@ input:focus {
 
 .active-voice {
   color: var(--text);
-  background: rgba(115, 199, 180, 0.08);
+  background: var(--channel-dim);
 }
 
 .voice-channel.connected {
   color: var(--text);
-  background: rgba(103, 211, 145, 0.15);
-  box-shadow: inset 3px 0 0 var(--good);
+  background: color-mix(in srgb, var(--channel-dim) 82%, var(--good));
+  box-shadow: inset 3px 0 0 var(--channel-accent);
 }
 
 .voice-channel.occupied:not(.connected) {
   color: var(--text);
-  background: rgba(124, 108, 255, 0.1);
+  background: var(--channel-dim);
 }
 
 .voice-channel.occupied small::before {
@@ -428,7 +526,7 @@ input:focus {
   border: 1px solid rgba(103, 211, 145, 0.35);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(103, 211, 145, 0.1), rgba(124, 108, 255, 0.1)),
+    linear-gradient(135deg, var(--channel-dim), rgba(103, 211, 145, 0.08)),
     rgba(35, 36, 40, 0.72);
   backdrop-filter: blur(12px);
 }
@@ -464,7 +562,7 @@ input:focus {
 
 .voice-controls button:last-child {
   color: #ffffff;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--channel-accent), var(--channel-strong));
 }
 
 .voice-controls button:disabled {
@@ -477,11 +575,11 @@ input:focus {
   gap: 10px;
   margin: 0 14px 14px;
   padding: 12px;
-  border: 1px solid rgba(124, 108, 255, 0.18);
+  border: 1px solid var(--channel-dim);
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(35, 36, 40, 0.82), rgba(24, 24, 30, 0.82)),
-    radial-gradient(circle at 80% 20%, rgba(124, 108, 255, 0.14), transparent 12rem);
+    linear-gradient(145deg, var(--channel-dim), rgba(0, 0, 0, 0));
 }
 
 .soundboard-head {
@@ -500,7 +598,7 @@ input:focus {
   padding: 0 9px;
   border-radius: 7px;
   color: var(--text);
-  background: var(--surface-strong);
+  background: color-mix(in srgb, var(--surface-strong) 78%, var(--channel-accent));
   font-size: 0.72rem;
   font-weight: 800;
 }
@@ -523,14 +621,14 @@ input:focus {
   padding: 5px 7px;
   border-radius: 8px;
   color: var(--text);
-  background: rgba(56, 58, 64, 0.72);
+  background: color-mix(in srgb, rgba(56, 58, 64, 0.76) 84%, var(--channel-accent));
   text-align: left;
   font-size: 0.72rem;
   font-weight: 700;
 }
 
 .sound-button:hover {
-  background: rgba(124, 108, 255, 0.22);
+  background: color-mix(in srgb, var(--channel-accent) 24%, rgba(56, 58, 64, 0.88));
 }
 
 .sound-button span {
@@ -540,7 +638,7 @@ input:focus {
   height: 24px;
   border-radius: 7px;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--accent), #23a559);
+  background: linear-gradient(135deg, var(--channel-accent), var(--channel-strong));
   font-size: 0.65rem;
   font-weight: 900;
 }
@@ -552,7 +650,7 @@ input:focus {
   align-items: center;
   padding: 14px;
   border-top: 1px solid var(--line);
-  background: rgba(16, 17, 20, 0.52);
+  background: linear-gradient(135deg, rgba(16, 17, 20, 0.58), var(--channel-dim));
   backdrop-filter: blur(10px);
 }
 
@@ -578,7 +676,7 @@ input:focus {
   display: grid;
   grid-template-rows: 78px minmax(0, 1fr) auto;
   min-width: 0;
-  background: rgba(49, 51, 56, 0.88);
+  background: linear-gradient(135deg, rgba(37, 41, 48, 0.92), rgba(26, 29, 35, 0.88));
   box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
@@ -593,7 +691,7 @@ input:focus {
   padding: 28px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.035);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), var(--channel-dim));
 }
 
 .empty-state h3 {
@@ -624,10 +722,10 @@ input:focus {
   align-items: start;
   margin: 10px 0 18px;
   padding: 14px;
-  border: 1px solid rgba(124, 108, 255, 0.16);
+  border: 1px solid var(--channel-dim);
   background:
     linear-gradient(135deg, rgba(22, 22, 28, 0.7), rgba(49, 51, 56, 0.72)),
-    radial-gradient(circle at 76% 20%, rgba(124, 108, 255, 0.15), transparent 18rem);
+    linear-gradient(145deg, var(--channel-dim), rgba(0, 0, 0, 0));
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.26);
 }
 
@@ -636,10 +734,10 @@ input:focus {
   width: min(100%, 520px);
   max-height: 420px;
   margin-top: 10px;
-  border: 1px solid rgba(184, 173, 255, 0.22);
+  border: 1px solid color-mix(in srgb, var(--channel-accent) 38%, transparent);
   border-radius: 8px;
   background: #111214;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36), 0 0 28px rgba(124, 108, 255, 0.08);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36), 0 0 28px var(--channel-dim);
 }
 
 body.constitution-theme .chat-header {
@@ -656,10 +754,10 @@ body.constitution-theme .message:hover {
 }
 
 body.constitution-theme .video-post {
-  border-color: rgba(184, 173, 255, 0.34);
+  border-color: color-mix(in srgb, var(--channel-accent) 42%, transparent);
   background:
     linear-gradient(135deg, rgba(12, 12, 16, 0.74), rgba(49, 51, 56, 0.62)),
-    radial-gradient(circle at 78% 18%, rgba(184, 173, 255, 0.22), transparent 18rem);
+    linear-gradient(145deg, var(--channel-dim), rgba(0, 0, 0, 0));
 }
 
 .message header {
@@ -683,7 +781,7 @@ body.constitution-theme .video-post {
 .avatar {
   flex: 0 0 auto;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--accent), #23a559);
+  background: linear-gradient(135deg, var(--channel-accent), var(--channel-strong));
 }
 
 .composer {
@@ -698,6 +796,7 @@ body.constitution-theme .video-post {
   height: 46px;
   padding: 0 14px;
   background: rgba(17, 18, 22, 0.88);
+  border-color: color-mix(in srgb, var(--channel-accent) 22%, var(--line));
   backdrop-filter: blur(10px);
 }
 
@@ -731,6 +830,14 @@ body.constitution-theme .video-post {
 .member span {
   color: var(--muted);
   font-size: 0.78rem;
+}
+
+.member .persona-rasta-bum + div span {
+  color: color-mix(in srgb, var(--persona-rasta-strong) 76%, var(--muted));
+}
+
+.member .persona-pigeon-crumb + div span {
+  color: color-mix(in srgb, var(--persona-pigeon-strong) 76%, var(--muted));
 }
 
 @media (max-width: 1040px) {
