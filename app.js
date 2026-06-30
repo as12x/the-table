@@ -6,6 +6,30 @@ const personas = {
   "pigeon-crumb": { id: "persona-pigeon-crumb", name: "Pigeon Crumb", handle: "pigeon" }
 };
 
+const soundboardSounds = [
+  { label: "vineboom", icon: "X", type: "boom" },
+  { label: "heil", icon: "H", type: "chant" },
+  { label: "Among Us", icon: "A", type: "blip" },
+  { label: "Crumbs", icon: "C", type: "crumbs" },
+  { label: "Jew", icon: "J", type: "stab" },
+  { label: "Black", icon: "B", type: "bass" },
+  { label: "UK", icon: "UK", type: "chirp" },
+  { label: "Nuke", icon: "N", type: "boom" },
+  { label: "Jeff", icon: "J", type: "sparkle" },
+  { label: "doks", icon: "D", type: "blip" },
+  { label: "Du bist gute", icon: "D", type: "voice" },
+  { label: "ok", icon: "OK", type: "ok" },
+  { label: "Wiggle Wiggle", icon: "W", type: "wiggle" },
+  { label: "Fat butt", icon: "F", type: "bounce" },
+  { label: "KYS", icon: "K", type: "alarm" },
+  { label: "flush", icon: "F", type: "flush" },
+  { label: "DISGUSTANG", icon: "D", type: "stab" },
+  { label: "Kirkling", icon: "K", type: "sweep" },
+  { label: "Summer Dubis", icon: "S", type: "sparkle" },
+  { label: "Phonk", icon: "P", type: "phonk" },
+  { label: "Scream", icon: "S", type: "scream" }
+];
+
 const discordMembers = [
   { name: "Xllth", status: "Invisible" },
   { name: "Pigeon Crumb", status: "Offline" },
@@ -114,6 +138,9 @@ const voiceStatus = document.querySelector("#voiceStatus");
 const muteButton = document.querySelector("#muteButton");
 const leaveVoiceButton = document.querySelector("#leaveVoiceButton");
 const remoteAudio = document.querySelector("#remoteAudio");
+const soundGrid = document.querySelector("#soundGrid");
+const announceTestButton = document.querySelector("#announceTestButton");
+let audioContext = null;
 
 function initials(value) {
   return (value || "?")
@@ -217,6 +244,138 @@ async function choosePersona(personaKey) {
 
 function setVoiceStatus(text) {
   voiceStatus.textContent = text;
+}
+
+function getAudioContext() {
+  audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+  if (audioContext.state === "suspended") audioContext.resume();
+  return audioContext;
+}
+
+function playTone({ frequency = 160, duration = 0.35, type = "sine", gain = 0.18, start = 0, destination }) {
+  const ctx = getAudioContext();
+  const osc = ctx.createOscillator();
+  const amp = ctx.createGain();
+  const dest = destination || ctx.destination;
+  const now = ctx.currentTime + start;
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, now);
+  amp.gain.setValueAtTime(0.0001, now);
+  amp.gain.exponentialRampToValueAtTime(gain, now + 0.025);
+  amp.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  osc.connect(amp).connect(dest);
+  osc.start(now);
+  osc.stop(now + duration + 0.04);
+}
+
+function playNoise({ duration = 0.4, gain = 0.12, start = 0, filter = 700, destination }) {
+  const ctx = getAudioContext();
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+
+  const src = ctx.createBufferSource();
+  const amp = ctx.createGain();
+  const biquad = ctx.createBiquadFilter();
+  const now = ctx.currentTime + start;
+
+  biquad.type = "lowpass";
+  biquad.frequency.setValueAtTime(filter, now);
+  amp.gain.setValueAtTime(gain, now);
+  amp.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  src.buffer = buffer;
+  src.connect(biquad).connect(amp).connect(destination || ctx.destination);
+  src.start(now);
+}
+
+function playSoundEffect(soundType) {
+  const ctx = getAudioContext();
+  const wet = ctx.createGain();
+  const delay = ctx.createDelay();
+  const feedback = ctx.createGain();
+  wet.gain.value = 0.48;
+  delay.delayTime.value = 0.16;
+  feedback.gain.value = 0.42;
+  delay.connect(feedback).connect(delay);
+  delay.connect(wet).connect(ctx.destination);
+
+  const out = ctx.createGain();
+  out.connect(ctx.destination);
+  out.connect(delay);
+
+  const patterns = {
+    boom: () => {
+      playTone({ frequency: 72, duration: 0.65, type: "sine", gain: 0.36, destination: out });
+      playNoise({ duration: 0.5, gain: 0.16, filter: 180, destination: out });
+    },
+    chant: () => {
+      [130, 115, 98].forEach((f, i) => playTone({ frequency: f, duration: 0.22, type: "sawtooth", gain: 0.12, start: i * 0.18, destination: out }));
+    },
+    blip: () => {
+      [440, 660, 880].forEach((f, i) => playTone({ frequency: f, duration: 0.09, type: "square", gain: 0.1, start: i * 0.08, destination: out }));
+    },
+    crumbs: () => {
+      [260, 310, 190, 420].forEach((f, i) => playTone({ frequency: f, duration: 0.08, type: "triangle", gain: 0.09, start: i * 0.06, destination: out }));
+    },
+    stab: () => playTone({ frequency: 180, duration: 0.26, type: "sawtooth", gain: 0.18, destination: out }),
+    bass: () => playTone({ frequency: 52, duration: 0.45, type: "sine", gain: 0.32, destination: out }),
+    chirp: () => [700, 540, 880].forEach((f, i) => playTone({ frequency: f, duration: 0.07, type: "square", gain: 0.08, start: i * 0.06, destination: out })),
+    sparkle: () => [800, 1200, 960, 1440].forEach((f, i) => playTone({ frequency: f, duration: 0.12, type: "sine", gain: 0.06, start: i * 0.1, destination: out })),
+    voice: () => [170, 145, 130].forEach((f, i) => playTone({ frequency: f, duration: 0.22, type: "triangle", gain: 0.11, start: i * 0.16, destination: out })),
+    ok: () => [330, 440].forEach((f, i) => playTone({ frequency: f, duration: 0.12, type: "sine", gain: 0.1, start: i * 0.12, destination: out })),
+    wiggle: () => [260, 320, 240, 360, 260].forEach((f, i) => playTone({ frequency: f, duration: 0.08, type: "triangle", gain: 0.1, start: i * 0.07, destination: out })),
+    bounce: () => [90, 140, 90].forEach((f, i) => playTone({ frequency: f, duration: 0.14, type: "sine", gain: 0.18, start: i * 0.13, destination: out })),
+    alarm: () => [520, 320, 520, 320].forEach((f, i) => playTone({ frequency: f, duration: 0.13, type: "square", gain: 0.09, start: i * 0.13, destination: out })),
+    flush: () => playNoise({ duration: 0.75, gain: 0.13, filter: 950, destination: out }),
+    sweep: () => [220, 280, 360, 520].forEach((f, i) => playTone({ frequency: f, duration: 0.14, type: "sawtooth", gain: 0.08, start: i * 0.1, destination: out })),
+    phonk: () => [55, 55, 82, 55].forEach((f, i) => playTone({ frequency: f, duration: 0.13, type: "sine", gain: 0.28, start: i * 0.16, destination: out })),
+    scream: () => {
+      playTone({ frequency: 920, duration: 0.36, type: "sawtooth", gain: 0.11, destination: out });
+      playNoise({ duration: 0.36, gain: 0.08, filter: 2200, destination: out });
+    }
+  };
+
+  (patterns[soundType] || patterns.blip)();
+}
+
+function announceJoin(name) {
+  const message = `${name} is joining`;
+  if ("speechSynthesis" in window) {
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.68;
+    utterance.pitch = 0.45;
+    utterance.volume = 0.92;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  playTone({ frequency: 62, duration: 0.95, type: "sine", gain: 0.18 });
+  playTone({ frequency: 93, duration: 0.7, type: "triangle", gain: 0.1, start: 0.12 });
+  playNoise({ duration: 0.65, gain: 0.04, filter: 420 });
+}
+
+async function broadcastSound(sound) {
+  if (state.realtimeChannel) {
+    await state.realtimeChannel.send({
+      type: "broadcast",
+      event: "soundboard",
+      payload: { sender_id: currentIdentity()?.id, label: sound.label, type: sound.type }
+    });
+  }
+}
+
+function renderSoundboard() {
+  soundGrid.innerHTML = soundboardSounds
+    .map(
+      (sound) => `
+        <button class="sound-button" type="button" data-sound="${sound.label}">
+          <span>${sound.icon}</span>
+          ${sound.label}
+        </button>
+      `
+    )
+    .join("");
 }
 
 function renderMembers() {
@@ -356,6 +515,11 @@ function subscribeToMessages() {
       saveLocalMessage(payload.message);
       renderMessages();
     });
+
+  state.realtimeChannel.on("broadcast", { event: "soundboard" }, ({ payload }) => {
+    if (payload.sender_id === currentIdentity()?.id) return;
+    playSoundEffect(payload.type);
+  });
 
   if (state.session) {
     state.realtimeChannel.on(
@@ -616,6 +780,7 @@ async function joinVoice(room) {
     muted: state.voiceMuted,
     joined_at: new Date().toISOString()
   });
+  announceJoin(userLabel());
   setVoiceStatus("Waiting for someone else");
 }
 
@@ -751,6 +916,19 @@ voiceChannels.forEach((button) => {
   button.addEventListener("click", () => joinVoice(button.dataset.voiceRoom));
 });
 
+soundGrid.addEventListener("click", async (event) => {
+  const button = event.target.closest(".sound-button");
+  if (!button) return;
+  const sound = soundboardSounds.find((item) => item.label === button.dataset.sound);
+  if (!sound) return;
+  playSoundEffect(sound.type);
+  await broadcastSound(sound);
+});
+
+announceTestButton.addEventListener("click", () => {
+  announceJoin(currentIdentity()?.name || "Guest");
+});
+
 personaButtons.forEach((button) => {
   button.addEventListener("click", () => choosePersona(button.dataset.persona));
 });
@@ -760,6 +938,7 @@ leaveVoiceButton.addEventListener("click", leaveVoice);
 
 async function init() {
   await loadConfig();
+  renderSoundboard();
   const savedPersona = localStorage.getItem("the-table:persona");
   if (savedPersona && personas[savedPersona]) {
     state.persona = personas[savedPersona];
