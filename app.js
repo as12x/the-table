@@ -7,26 +7,26 @@ const personas = {
 };
 
 const soundboardSounds = [
-  { label: "vineboom", icon: "X", type: "boom" },
-  { label: "heil", icon: "H", type: "chant" },
-  { label: "Among Us", icon: "A", type: "blip" },
-  { label: "Crumbs", icon: "C", type: "crumbs" },
-  { label: "Jew", icon: "J", type: "stab" },
-  { label: "Black", icon: "B", type: "bass" },
-  { label: "UK", icon: "UK", type: "chirp" },
-  { label: "Nuke", icon: "N", type: "boom" },
-  { label: "Jeff", icon: "J", type: "sparkle" },
-  { label: "doks", icon: "D", type: "blip" },
-  { label: "Du bist gute", icon: "D", type: "voice" },
-  { label: "ok", icon: "OK", type: "ok" },
-  { label: "Wiggle Wiggle", icon: "W", type: "wiggle" },
-  { label: "Fat butt", icon: "F", type: "bounce" },
-  { label: "KYS", icon: "K", type: "alarm" },
-  { label: "flush", icon: "F", type: "flush" },
-  { label: "DISGUSTANG", icon: "D", type: "stab" },
-  { label: "Kirkling", icon: "K", type: "sweep" },
-  { label: "Summer Dubis", icon: "S", type: "sparkle" },
-  { label: "Phonk", icon: "P", type: "phonk" },
+  { label: "vineboom", icon: "X", type: "boom", src: "./assets/soundboard/vineboom.ogg" },
+  { label: "heil", icon: "H", type: "chant", src: "./assets/soundboard/heil.ogg" },
+  { label: "Among Us", icon: "A", type: "blip", src: "./assets/soundboard/among-us.ogg" },
+  { label: "Crumbs", icon: "C", type: "crumbs", src: "./assets/soundboard/crumbs.ogg" },
+  { label: "Jew", icon: "J", type: "stab", src: "./assets/soundboard/jew.ogg" },
+  { label: "Black", icon: "B", type: "bass", src: "./assets/soundboard/black.ogg" },
+  { label: "UK", icon: "UK", type: "chirp", src: "./assets/soundboard/uk.ogg" },
+  { label: "Nuke", icon: "N", type: "boom", src: "./assets/soundboard/nuke.ogg" },
+  { label: "Jeff", icon: "J", type: "sparkle", src: "./assets/soundboard/jeff.ogg" },
+  { label: "doks", icon: "D", type: "blip", src: "./assets/soundboard/doks.ogg" },
+  { label: "Du bist gute", icon: "D", type: "voice", src: "./assets/soundboard/du-bist-gute.ogg" },
+  { label: "ok", icon: "OK", type: "ok", src: "./assets/soundboard/ok.ogg" },
+  { label: "Wiggle Wiggle", icon: "W", type: "wiggle", src: "./assets/soundboard/wiggle-wiggle.ogg" },
+  { label: "Fat butt", icon: "F", type: "bounce", src: "./assets/soundboard/fat-butt.ogg" },
+  { label: "KYS", icon: "K", type: "alarm", src: "./assets/soundboard/kys.ogg" },
+  { label: "flush", icon: "F", type: "flush", src: "./assets/soundboard/flush.ogg" },
+  { label: "DISGUSTANG", icon: "D", type: "stab", src: "./assets/soundboard/disgustang.ogg" },
+  { label: "Kirkling", icon: "K", type: "sweep", src: "./assets/soundboard/kirkling.ogg" },
+  { label: "Summer Dubis", icon: "S", type: "sparkle", src: "./assets/soundboard/summer-dubis.ogg" },
+  { label: "Phonk", icon: "P", type: "phonk", src: "./assets/soundboard/phonk.ogg" },
   { label: "Scream", icon: "S", type: "scream" }
 ];
 
@@ -339,6 +339,17 @@ function playSoundEffect(soundType) {
   (patterns[soundType] || patterns.blip)();
 }
 
+function playBoardSound(sound) {
+  if (!sound) return;
+  if (sound.src) {
+    const audio = new Audio(sound.src);
+    audio.volume = 0.92;
+    audio.play().catch(() => playSoundEffect(sound.type));
+    return;
+  }
+  playSoundEffect(sound.type);
+}
+
 function announceJoin(name) {
   const message = `${name} is joining`;
   if ("speechSynthesis" in window) {
@@ -518,7 +529,8 @@ function subscribeToMessages() {
 
   state.realtimeChannel.on("broadcast", { event: "soundboard" }, ({ payload }) => {
     if (payload.sender_id === currentIdentity()?.id) return;
-    playSoundEffect(payload.type);
+    const sound = soundboardSounds.find((item) => item.label === payload.label) || payload;
+    playBoardSound(sound);
   });
 
   if (state.session) {
@@ -921,7 +933,7 @@ soundGrid.addEventListener("click", async (event) => {
   if (!button) return;
   const sound = soundboardSounds.find((item) => item.label === button.dataset.sound);
   if (!sound) return;
-  playSoundEffect(sound.type);
+  playBoardSound(sound);
   await broadcastSound(sound);
 });
 
