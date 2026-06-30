@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Table</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <video class="theme-video" id="themeVideo" muted loop playsinline preload="metadata">
+      <source src="./assets/constitution/table-signal.mp4" type="video/mp4" />
+    </video>
+    <main class="app-shell">
+      <aside class="rail" aria-label="Spaces">
+        <div class="brand-mark">T</div>
+        <button class="rail-button active" title="The Table" aria-label="The Table">#</button>
+        <button class="rail-button" title="Settings" aria-label="Settings">S</button>
+      </aside>
+
+      <aside class="sidebar" aria-label="Channels">
+        <header class="workspace-header">
+          <div>
+            <p class="eyebrow">Level 1 - 2 Boosts</p>
+            <h1>The Table</h1>
+          </div>
+          <span class="status-pill" id="connectionStatus">Offline</span>
+        </header>
+
+        <section class="panel auth-panel" id="authPanel">
+          <h2>Choose profile</h2>
+          <p>Pick who is using this browser.</p>
+          <div class="persona-login">
+            <button type="button" class="persona-button" data-persona="rasta-bum">
+              <span>RB</span>
+              <strong>Rasta Bum</strong>
+            </button>
+            <button type="button" class="persona-button" data-persona="pigeon-crumb">
+              <span>PC</span>
+              <strong>Pigeon Crumb</strong>
+            </button>
+          </div>
+          <details class="email-details">
+            <summary>Email login</summary>
+          <form id="authForm">
+            <label for="emailInput">Email</label>
+            <input id="emailInput" type="email" placeholder="you@example.com" required />
+            <button type="submit">Send link</button>
+          </form>
+          </details>
+          <p class="hint" id="authMessage"></p>
+        </section>
+
+        <nav class="channel-list" aria-label="Channels">
+          <p class="section-label">Text Channels</p>
+          <button class="channel active" data-channel="general"><span>#</span> general</button>
+          <button class="channel" data-channel="constitution"><span>#</span> constitution</button>
+          <button class="channel" data-channel="hustlers"><span>#</span> hustlers</button>
+          <button class="channel" data-channel="tax-reaper"><span>#</span> tax-reaper</button>
+          <button class="channel locked" data-channel="loans"><span>#</span> loans</button>
+          <button class="channel" data-channel="suits-tism"><span>#</span> suits-tism</button>
+
+          <p class="section-label voice-label">Voice Channels</p>
+          <button class="voice-channel" data-voice-room="General"><span>V</span> General</button>
+          <button class="voice-channel active-voice" data-voice-room="fortnite"><span>V</span> fortnite</button>
+          <button class="voice-channel locked" data-voice-room="gg"><span>V</span> gg</button>
+        </nav>
+
+        <section class="voice-panel" id="voicePanel" hidden>
+          <div>
+            <p class="section-label">Voice Connected</p>
+            <strong id="voiceRoomName">General</strong>
+            <span id="voiceStatus">Connecting</span>
+          </div>
+          <div class="voice-controls">
+            <button id="muteButton" type="button">Mute</button>
+            <button id="leaveVoiceButton" type="button">Leave</button>
+          </div>
+        </section>
+
+        <footer class="profile-strip">
+          <div class="avatar" id="userAvatar">?</div>
+          <div>
+            <strong id="userName">Guest</strong>
+            <span id="userEmail">Not signed in</span>
+          </div>
+          <button id="signOutButton" title="Sign out" aria-label="Sign out">Out</button>
+        </footer>
+      </aside>
+
+      <section class="chat-area" aria-label="Chat">
+        <header class="chat-header">
+          <div>
+            <p class="section-label">The Table</p>
+            <h2 id="channelTitle"># general</h2>
+          </div>
+          <div class="header-actions">
+            <button id="inviteButton">Invite</button>
+          </div>
+        </header>
+
+        <div class="messages" id="messages" aria-live="polite">
+          <div class="empty-state">
+            <h3>general chat</h3>
+            <p>Visible messages from the current Discord server are mirrored here as starter context.</p>
+          </div>
+        </div>
+
+        <form class="composer" id="messageForm">
+          <input id="messageInput" type="text" maxlength="1000" placeholder="Message #general" autocomplete="off" />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <aside class="members" aria-label="Members">
+        <header>
+          <p class="section-label">Members</p>
+          <h2 id="memberCount">1 online</h2>
+        </header>
+        <div id="membersList" class="member-list"></div>
+      </aside>
+    </main>
+
+    <template id="messageTemplate">
+      <article class="message">
+        <div class="avatar message-avatar"></div>
+        <div>
+          <header>
+            <strong class="message-author"></strong>
+            <time class="message-time"></time>
+          </header>
+          <p class="message-body"></p>
+        </div>
+      </article>
+    </template>
+
+    <template id="videoPostTemplate">
+      <article class="message video-post">
+        <div class="avatar message-avatar"></div>
+        <div>
+          <header>
+            <strong class="message-author"></strong>
+            <time class="message-time"></time>
+          </header>
+          <p class="message-body"></p>
+          <video class="post-video" controls preload="metadata" playsinline></video>
+        </div>
+      </article>
+    </template>
+
+    <div id="remoteAudio" class="remote-audio" aria-hidden="true"></div>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
