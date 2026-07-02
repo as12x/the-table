@@ -41,12 +41,19 @@
             </button>
           </div>
           <details class="email-details">
-            <summary>Email login</summary>
-          <form id="authForm">
-            <label for="emailInput">Email</label>
-            <input id="emailInput" type="email" placeholder="you@example.com" required />
-            <button type="submit">Send link</button>
-          </form>
+            <summary>Email account</summary>
+            <form id="authForm">
+              <label for="displayNameInput">Account name</label>
+              <input id="displayNameInput" type="text" placeholder="Rasta Bum" maxlength="40" autocomplete="name" />
+              <label for="emailInput">Email</label>
+              <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" required />
+              <label for="passwordInput">Password</label>
+              <input id="passwordInput" type="password" minlength="6" placeholder="At least 6 characters" autocomplete="current-password" required />
+              <div class="auth-actions">
+                <button type="submit" data-auth-action="signin">Log in</button>
+                <button type="button" data-auth-action="signup">Create account</button>
+              </div>
+            </form>
           </details>
           <p class="hint" id="authMessage"></p>
         </section>

@@ -114,10 +114,12 @@ const state = {
   voiceRoom: null,
   voiceChannel: null,
   voicePresenceChannels: new Map(),
+  voiceReadyChannels: new Map(),
   voiceOccupants: new Map(),
   voiceStream: null,
   voiceMuted: false,
-  voicePeers: new Map()
+  voicePeers: new Map(),
+  voicePendingIce: new Map()
 };
 
 const channels = document.querySelectorAll(".channel");
@@ -129,6 +131,10 @@ const messageInput = document.querySelector("#messageInput");
 const authForm = document.querySelector("#authForm");
 const authPanel = document.querySelector("#authPanel");
 const authMessage = document.querySelector("#authMessage");
+const authActionButtons = document.querySelectorAll("[data-auth-action]");
+const displayNameInput = document.querySelector("#displayNameInput");
+const emailInput = document.querySelector("#emailInput");
+const passwordInput = document.querySelector("#passwordInput");
 const channelTitle = document.querySelector("#channelTitle");
 const connectionStatus = document.querySelector("#connectionStatus");
 const userAvatar = document.querySelector("#userAvatar");
@@ -195,9 +201,10 @@ function saveLocalMessage(message) {
 
 function currentIdentity() {
   if (state.session?.user) {
+    const accountName = state.session.user.user_metadata?.display_name;
     return {
       id: state.session.user.id,
-      name: displayName(state.session.user.email),
+      name: accountName || displayName(state.session.user.email),
       handle: state.session.user.email,
       email: state.session.user.email,
       type: "supabase"
@@ -214,6 +221,12 @@ function currentIdentity() {
 function setStatus(text, online = false) {
   connectionStatus.textContent = text;
   connectionStatus.classList.toggle("online", online);
+}
+
+function setAuthBusy(busy) {
+  authActionButtons.forEach((button) => {
+    button.disabled = busy;
+  });
 }
 
 async function loadConfig() {
@@ -706,6 +719,7 @@ async function handleVoiceSignal(payload) {
 
   if (payload.type === "offer") {
     await peer.setRemoteDescription(new RTCSessionDescription(payload.data));
+    await flushPendingIce(payload.from, peer);
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
     await sendVoiceSignal(payload.from, "answer", answer);
@@ -713,10 +727,26 @@ async function handleVoiceSignal(payload) {
 
   if (payload.type === "answer") {
     await peer.setRemoteDescription(new RTCSessionDescription(payload.data));
+    await flushPendingIce(payload.from, peer);
   }
 
   if (payload.type === "ice") {
+    if (!peer.remoteDescription) {
+      const queued = state.voicePendingIce.get(payload.from) || [];
+      queued.push(payload.data);
+      state.voicePendingIce.set(payload.from, queued);
+      return;
+    }
     await peer.addIceCandidate(new RTCIceCandidate(payload.data));
+  }
+}
+
+async function flushPendingIce(peerId, peer) {
+  const queued = state.voicePendingIce.get(peerId) || [];
+  state.voicePendingIce.delete(peerId);
+
+  for (const candidate of queued) {
+    await peer.addIceCandidate(new RTCIceCandidate(candidate));
   }
 }
 
@@ -754,6 +784,11 @@ function subscribeVoicePresence() {
   voiceChannels.forEach((button) => {
     const room = button.dataset.voiceRoom;
     button.dataset.defaultStatus = button.querySelector("small")?.textContent || "";
+    let resolveReady;
+    const ready = new Promise((resolve) => {
+      resolveReady = resolve;
+    });
+    state.voiceReadyChannels.set(room, ready);
 
     const channel = client.channel(`voice:${room}`, {
       config: {
@@ -769,7 +804,7 @@ function subscribeVoicePresence() {
       .on("presence", { event: "sync" }, () => {
         const presence = channel.presenceState();
         const occupants = Object.entries(presence)
-          .map(([_id, entries]) => entries?.[0])
+          .flatMap(([_id, entries]) => entries || [])
           .filter((entry) => entry?.user_id)
           .map((entry) => ({
             id: entry.user_id,
@@ -784,10 +819,26 @@ function subscribeVoicePresence() {
           handleRoomPresence(occupants.map((person) => person.id));
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          resolveReady();
+        }
+      });
 
     state.voicePresenceChannels.set(room, channel);
   });
+}
+
+async function waitForVoiceReady(room) {
+  const ready = state.voiceReadyChannels.get(room);
+  if (!ready) return false;
+
+  return Promise.race([
+    ready.then(() => true),
+    new Promise((resolve) => {
+      setTimeout(() => resolve(false), 6000);
+    })
+  ]);
 }
 
 async function joinVoice(room) {
@@ -808,8 +859,9 @@ async function joinVoice(room) {
 
   subscribeVoicePresence();
   state.voiceChannel = state.voicePresenceChannels.get(room);
+  const voiceReady = await waitForVoiceReady(room);
 
-  if (!state.voiceChannel) {
+  if (!state.voiceChannel || !voiceReady) {
     setVoiceStatus("Voice unavailable");
     return;
   }
@@ -865,6 +917,7 @@ async function leaveVoice() {
   for (const peerId of [...state.voicePeers.keys()]) closePeer(peerId);
   state.voiceStream?.getTracks().forEach((track) => track.stop());
   remoteAudio.innerHTML = "";
+  state.voicePendingIce.clear();
   state.voiceRoom = null;
   state.voiceChannel = null;
   state.voiceStream = null;
@@ -909,6 +962,13 @@ channels.forEach((button) => {
   });
 });
 
+authActionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    authForm.dataset.action = button.dataset.authAction;
+    if (button.type === "button") authForm.requestSubmit();
+  });
+});
+
 authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -917,13 +977,53 @@ authForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  const email = document.querySelector("#emailInput").value.trim();
-  const { error } = await client.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: config.SITE_URL || window.location.origin }
-  });
+  const action = authForm.dataset.action || event.submitter?.dataset.authAction || "signin";
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  const accountName = displayNameInput.value.trim() || displayName(email);
 
-  authMessage.textContent = error ? error.message : "Check your email for the sign-in link.";
+  setAuthBusy(true);
+  authMessage.textContent = action === "signup" ? "Creating account..." : "Logging in...";
+
+  try {
+    if (action === "signup") {
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { display_name: accountName },
+          emailRedirectTo: config.SITE_URL || window.location.origin
+        }
+      });
+
+      if (error) throw error;
+      if (data.session) {
+        state.persona = null;
+        localStorage.removeItem("the-table:persona");
+        setUser(data.session);
+        await loadMessages();
+        subscribeToMessages();
+        authMessage.textContent = "";
+      } else {
+        authMessage.textContent = "Account created. Check your email to confirm it, then log in.";
+      }
+      return;
+    }
+
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    state.persona = null;
+    localStorage.removeItem("the-table:persona");
+    setUser(data.session);
+    await loadMessages();
+    subscribeToMessages();
+    authMessage.textContent = "";
+  } catch (error) {
+    authMessage.textContent = error.message;
+  } finally {
+    authForm.dataset.action = "signin";
+    setAuthBusy(false);
+  }
 });
 
 messageForm.addEventListener("submit", async (event) => {
