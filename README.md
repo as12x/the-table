@@ -32,6 +32,19 @@ on conflict (email) do update set role = excluded.role;
 
 For local-only testing, you can also put those public values in `config.js`.
 
+## Voice Chat
+
+Voice chat uses WebRTC with Supabase Realtime for signaling. The app includes STUN plus OpenRelay TURN fallback so calls work on more networks.
+
+To use your own TURN provider in Vercel, add either:
+
+- `ICE_SERVERS_JSON` - a JSON array of WebRTC ICE server objects.
+- Or `TURN_URLS`, `TURN_USERNAME`, and `TURN_CREDENTIAL` - comma-separated TURN URLs plus credentials.
+
+Optional:
+
+- `FORCE_TURN=true` - forces relay-only mode for testing restrictive networks.
+
 ## Local Preview
 
 Use any static server from this folder. With Node installed:
@@ -45,6 +58,7 @@ npx serve .
 1. Push this folder to GitHub.
 2. Import the repo in Vercel.
 3. Add `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SITE_URL` in Project Settings > Environment Variables.
+   Add TURN env vars too if you have a private TURN provider.
 4. Deploy. No build command is required.
 5. Add the Vercel URL to Supabase Authentication > URL Configuration.
 

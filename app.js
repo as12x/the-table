@@ -39,6 +39,27 @@ const soundboardSounds = [
   { label: "Scream", icon: "S", type: "scream" }
 ];
 
+const defaultIceServers = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:global.stun.twilio.com:3478" },
+  { urls: "stun:openrelay.metered.ca:80" },
+  {
+    urls: "turn:openrelay.metered.ca:80",
+    username: "openrelayproject",
+    credential: "openrelayproject"
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443",
+    username: "openrelayproject",
+    credential: "openrelayproject"
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+    username: "openrelayproject",
+    credential: "openrelayproject"
+  }
+];
+
 const discordMembers = [
   { name: "Xllth", status: "Invisible" },
   { name: "Pigeon Crumb", status: "Offline" },
@@ -628,11 +649,13 @@ async function sendMessage(body) {
 }
 
 function peerConfig() {
+  const configuredIceServers = Array.isArray(config.ICE_SERVERS)
+    ? config.ICE_SERVERS.filter((server) => server?.urls)
+    : [];
+
   return {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:global.stun.twilio.com:3478" }
-    ]
+    iceServers: configuredIceServers.length ? configuredIceServers : defaultIceServers,
+    iceTransportPolicy: config.FORCE_TURN === true || config.FORCE_TURN === "true" ? "relay" : "all"
   };
 }
 
@@ -695,8 +718,17 @@ function createPeer(peerId) {
   };
 
   peer.onconnectionstatechange = () => {
+    if (peer.connectionState === "connecting") {
+      setVoiceStatus("Connecting voice");
+    }
+
+    if (peer.connectionState === "connected") {
+      setVoiceStatus("Voice connected");
+    }
+
     if (["failed", "closed", "disconnected"].includes(peer.connectionState)) {
       closePeer(peerId);
+      setVoiceStatus("Voice disconnected");
     }
   };
 
